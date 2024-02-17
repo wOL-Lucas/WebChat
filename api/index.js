@@ -13,7 +13,6 @@ class server{
 
         this.app = express();
         this.app.use(bodyParser.json());
-        this.app.use(this.request_middleware)
 
         this.server = https.createServer({
             
@@ -35,11 +34,6 @@ class server{
         })
 
 
-        this.app.get('/login', (req, res)=>{
-            res.sendFile(__dirname + '/public/login/login.html');
-        });
-
-
     };
 
     startServer(){
@@ -55,23 +49,6 @@ class server{
             }
             return true;
         });
-    }
-
-
-    request_middleware = (req, res, next)=>{
-        if (req.path.startsWith('/login') || toString(req.path).startsWith("/public")){
-            next();
-            return;
-        }
-        
-        
-        const token = req.headers.cookie.split('=')[1];
-        if (this.verify_token(token)){
-            next();
-        }
-        else{
-            res.status(401).json({"error":"Unauthorized"});
-        }
     }
 }
 
