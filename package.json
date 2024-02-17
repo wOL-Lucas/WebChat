@@ -1,0 +1,28 @@
+{
+  "name": "chatproject",
+  "version": "1.0.0",
+  "description": "WebChat developed with Node.js, Express, Socket.io, and JsonWebToken",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wOL-Lucas/webchat.git"
+  },
+  "keywords": [],
+  "author": "lucas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wOL-Lucas/WebChat/issues"
+  },
+  "homepage": "https://github.com/wOL-Lucas/WebChat#readme",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "json-server": "^0.17.3",
+    "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.0.3",
+    "socket.io": "^4.7.2"
+  }
+}
