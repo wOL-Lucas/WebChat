@@ -4,7 +4,8 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const express = require('express');
-const {Server} = require('socket.io');
+const WebSocket = require('ws');
+const { decode } = require('punycode');
 
 
 class server{
@@ -15,16 +16,19 @@ class server{
         this.app.use(bodyParser.json());
 
         this.server = https.createServer({
-            
             key: fs.readFileSync('./auth/key.pem'),
             cert: fs.readFileSync('./auth/cert.pem')
-
         },this.app);
 
-        this.io = new Server(this.server)
+        this.io = new WebSocket.Server({server: this.server});
         this.io.on('connection', (socket)=>{
-            console.log("nova conexão");
+            console.log("New connection");
             socket.emit('message', 'Connected');
+
+            socket.on('message',(message)=>{
+                console.log("message received ", message.toString());
+                socket.send('Message received');
+            })
         });
 
         
