@@ -24,14 +24,13 @@ class server{
 
         },this.app);
 
-        
         this.app.post('/login', (req, res)=>{
             const token = jwt.sign({"username":req.body.username, "expiresIn":"1h"}, fs.readFileSync('./auth/privatekey.pem'), {algorithm: 'RS256'});
             res.json({"token":token});
         })
 
         this.app.post('/chats', (req,res)=>{
-            let created = this.create_room(req.body.name, req.body.users)
+            let created = this.create_room(req.body.name.replace(/ /g, "_"), req.body.users)
             if(!created){
                 return res.status(400).json({"message":"Room already exists"});
             }
@@ -39,7 +38,6 @@ class server{
             return res.json({"message":"Room created", "room_name":req.body.name}) 
 
         })
-
 
     };
 
@@ -60,22 +58,36 @@ class server{
 
     create_room(name, users){
         let room = new Room(name, users);
-        if (this.rooms[room.name]){
+        if(this.rooms[room.name]){
             return false;
         }
 
-        const room_websocket = new WebSocket.Server({"server":this.server}, {path: `/ws/${room.name.replace(' ', '_')}`});
+        const room_websocket = new WebSocket.Server({noServer:true});
         
         room_websocket.on('connection', (socket)=>{
-
             socket.on('message', (message)=>{
                 console.log(message.toString());
                 room_websocket.emit('message', message);
             });
         });
 
-        this.rooms[room.name] = room;
-        console.log(this.rooms);
+        this.server.on('upgrade', (request, socket, head)=>{
+            const pathname = request.url.split('/')[2];
+            if(!pathname){
+                socket.destroy();
+            }
+
+            console.log("Atempt for", pathname)
+
+            if(pathname === room.name){
+                room_websocket.handleUpgrade(request, socket, head, (ws)=>{
+                    room_websocket.emit('connection', ws, request);
+                });
+            }
+        });
+
+        this.rooms[room.name] = {"room":room, "websocket":room_websocket};
+        console.log("rooms ", this.rooms);
 
         return true;
     }
