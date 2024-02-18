@@ -4,8 +4,9 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const express = require('express');
-const {Server} = require('socket.io');
-
+const WebSocket = require('ws');
+const Room = require('./entities/room');
+const User = require('./entities/user');
 
 class server{
     constructor(){
@@ -13,6 +14,8 @@ class server{
 
         this.app = express();
         this.app.use(bodyParser.json());
+        this.users = JSON.parse(fs.readFileSync('./data/users.json'));
+        this.rooms = {};
 
         this.server = https.createServer({
             
@@ -21,16 +24,20 @@ class server{
 
         },this.app);
 
-        this.io = new Server(this.server)
-        this.io.on('connection', (socket)=>{
-            console.log("nova conexão");
-            socket.emit('message', 'Connected');
-        });
-
         
         this.app.post('/login', (req, res)=>{
             const token = jwt.sign({"username":req.body.username, "expiresIn":"1h"}, fs.readFileSync('./auth/privatekey.pem'), {algorithm: 'RS256'});
             res.json({"token":token});
+        })
+
+        this.app.post('/chats', (req,res)=>{
+            let created = this.create_room(req.body.name, req.body.users)
+            if(!created){
+                return res.status(400).json({"message":"Room already exists"});
+            }
+
+            return res.json({"message":"Room created", "room_name":req.body.name}) 
+
         })
 
 
@@ -49,6 +56,28 @@ class server{
             }
             return true;
         });
+    }
+
+    create_room(name, users){
+        let room = new Room(name, users);
+        if (this.rooms[room.name]){
+            return false;
+        }
+
+        const room_websocket = new WebSocket.Server({"server":this.server}, {path: `/ws/${room.name.replace(' ', '_')}`});
+        
+        room_websocket.on('connection', (socket)=>{
+
+            socket.on('message', (message)=>{
+                console.log(message.toString());
+                room_websocket.emit('message', message);
+            });
+        });
+
+        this.rooms[room.name] = room;
+        console.log(this.rooms);
+
+        return true;
     }
 }
 
