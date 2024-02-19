@@ -2,11 +2,30 @@
     "users":[
         {
             "username":"maxx",
-            "password":"1234"
+            "password":"1234",
+            "rooms":[]
         },
         {
             "username":"pegasus",
-            "password":"1234"
+            "password":"1234",
+            "rooms":[]
+        },
+        {
+            "username":"Lucas",
+            "password":"1234",
+            "rooms":[
+                {
+                    "name":"room1",
+                    "users":[
+                        {
+                            "username":"maxx"
+                        },
+                        {
+                            "username":"pegasus"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }
