@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const express = require('express');
 const WebSocket = require('ws');
+const cors = require('cors');
 const Room = require('./entities/room');
 const User = require('./entities/user');
 
@@ -13,8 +14,9 @@ class server{
         this.port = 6800;
 
         this.app = express();
+        this.app.use(cors());
         this.app.use(bodyParser.json());
-        this.users = JSON.parse(fs.readFileSync('./data/users.json'));
+        this.users = JSON.parse(fs.readFileSync('./data/users.json')).users;
         this.rooms = {};
 
         this.server = https.createServer({
@@ -34,10 +36,21 @@ class server{
             if(!created){
                 return res.status(400).json({"message":"Room already exists"});
             }
-
+            
             return res.json({"message":"Room created", "room_name":req.body.name}) 
 
         })
+
+        this.app.get('/chats', (req, res)=>{
+            const userName = req.query.user;
+            for (const user of this.users){
+                if(user.username === userName){
+                    return res.json(user.rooms);
+                }
+            }
+
+            return res.status(404).json({"message":"No rooms found for this user"});
+        });
 
     };
 
@@ -87,6 +100,13 @@ class server{
         });
 
         this.rooms[room.name] = {"room":room, "websocket":room_websocket};
+        Array.from(this.users).forEach((user)=>{
+            if(user.name == users[0].name){
+                console.log("user found", user);
+                user.rooms.push(room.name);
+            }
+        });
+
         console.log("rooms ", this.rooms);
 
         return true;
