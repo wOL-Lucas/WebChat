@@ -16,9 +16,6 @@ class server{
         this.app = express();
         this.app.use(cors());
         this.app.use(bodyParser.json());
-        this.users = JSON.parse(fs.readFileSync('./data/users.json')).users;
-        this.rooms = {};
-
         this.server = https.createServer({
             
             key: fs.readFileSync('./auth/key.pem'),
@@ -26,17 +23,24 @@ class server{
 
         },this.app);
 
+        this.users = JSON.parse(fs.readFileSync('./data/users.json')).users;
+        this.rooms = {};
+        this.instanciate_existing_rooms();
+
+
         this.app.post('/login', (req, res)=>{
             const token = jwt.sign({"username":req.body.username, "expiresIn":"1h"}, fs.readFileSync('./auth/privatekey.pem'), {algorithm: 'RS256'});
             res.json({"token":token});
         })
 
         this.app.post('/chats', (req,res)=>{
-            let created = this.create_room(req.body.name.replace(/ /g, "_"), req.body.users)
+            let created = this.create_room(req.body.name, req.body.users)
             if(!created){
                 return res.status(400).json({"message":"Room already exists"});
             }
             
+            fs.writeFileSync('./data/users.json', "{\"users\":" + JSON.stringify(this.users) + "}");
+
             return res.json({"message":"Room created", "room_name":req.body.name}) 
 
         })
@@ -70,6 +74,8 @@ class server{
     }
 
     create_room(name, users){
+        name = name.replace(/ /g, "_")
+
         let room = new Room(name, users);
         if(this.rooms[room.name]){
             return false;
@@ -79,7 +85,6 @@ class server{
         
         room_websocket.on('connection', (socket)=>{
             socket.on('message', (message)=>{
-                console.log(message.toString());
                 room_websocket.emit('message', message);
             });
         });
@@ -90,7 +95,6 @@ class server{
                 socket.destroy();
             }
 
-            console.log("Atempt for", pathname)
 
             if(pathname === room.name){
                 room_websocket.handleUpgrade(request, socket, head, (ws)=>{
@@ -101,15 +105,43 @@ class server{
 
         this.rooms[room.name] = {"room":room, "websocket":room_websocket};
         Array.from(this.users).forEach((user)=>{
-            if(user.name == users[0].name){
-                console.log("user found", user);
-                user.rooms.push(room.name);
+            if(user.username == users[0].username){
+                user.rooms.push(room);
+                console.log("user ", user.rooms)
             }
         });
 
         console.log("rooms ", this.rooms);
 
         return true;
+    }
+
+    instanciate_existing_rooms(){
+        Array.from(this.users).forEach((user)=>{
+            Array.from(user.rooms).forEach((room)=>{
+                let room_websocket = new WebSocket.Server({noServer:true});
+                room_websocket.on('connection', (socket)=>{
+                    socket.on('message', (message)=>{
+                        room_websocket.emit('message', message);
+                    });
+                });
+
+                this.server.on('upgrade', (request, socket, head)=>{
+                    const pathname = request.url.split('/')[2];
+                    if(!pathname){
+                        socket.destroy();
+                    }
+
+                    if(pathname === room.name){
+                        room_websocket.handleUpgrade(request, socket, head, (ws)=>{
+                            room_websocket.emit('connection', ws, request);
+                        });
+                    }
+                });
+
+                this.rooms[room.name] = {"room":room, "websocket":room_websocket};
+            })
+        })
     }
 }
 
