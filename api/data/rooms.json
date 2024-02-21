@@ -1,1 +1,16 @@
-"{\"rooms\":[object Object]}"
+{
+    "rooms":[
+        {   
+            "name":"Room 1",
+            "description":"This is room 1",
+            "users":[
+                {
+                    "username":"Lucas"
+                },
+                {
+                    "username":"pegasus"
+                }
+            ]
+        }
+    ]
+}
