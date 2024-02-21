@@ -34,13 +34,13 @@ class server{
         })
 
         this.app.post('/chats', (req,res)=>{
+            console.log("post for: ", req.body.name)
             let created = this.create_room(req.body.name, req.body.users)
             if(!created){
                 return res.status(400).json({"message":"Room already exists"});
             }
             
-            fs.writeFileSync('./data/users.json', "{\"users\":" + JSON.stringify(this.users) + "}");
-
+            //fs.writeFileSync('./data/users.json', "{\"users\":" + JSON.stringify(this.users) + "}");
             return res.json({"message":"Room created", "room_name":req.body.name}) 
 
         })
@@ -85,7 +85,11 @@ class server{
         
         room_websocket.on('connection', (socket)=>{
             socket.on('message', (message)=>{
-                room_websocket.emit('message', message);
+                room_websocket.clients.forEach((client)=>{
+                    if(client !== socket && client.readyState === WebSocket.OPEN){
+                        client.send(message);
+                    }
+                });
             });
         });
 
@@ -121,8 +125,13 @@ class server{
             Array.from(user.rooms).forEach((room)=>{
                 let room_websocket = new WebSocket.Server({noServer:true});
                 room_websocket.on('connection', (socket)=>{
+
                     socket.on('message', (message)=>{
-                        room_websocket.emit('message', message);
+                        room_websocket.clients.forEach((client)=>{
+                            if(client !== socket && client.readyState === WebSocket.OPEN){
+                                client.send(message);
+                            }
+                        });
                     });
                 });
 

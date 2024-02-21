@@ -2,7 +2,10 @@ import styled from 'styled-components';
 import redirectToModule from '../../utils/redirectToModule';
 
 const Container = styled.div`
-    
+    img{
+        height: auto;
+        max-height: 40px;
+    }
     width: 100%;
     height: auto;
     display: flex;
@@ -29,7 +32,7 @@ const ListItem = ({text, icon, module}) => {
     return (
         <Container onClick={(event)=> redirectToModule(event, module)}>
             <p>{text}</p>
-            <p>{icon}</p>
+            <img src={icon} alt="icone"/>
         </Container>
     )
 }

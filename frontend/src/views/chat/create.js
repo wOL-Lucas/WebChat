@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { useState } from 'react';
+import axios from 'axios';
 
 
 const Container = styled.div`
@@ -32,39 +33,31 @@ const Input = styled.input`
 `;
 
 const Create = () => {
+
     const [chatName, setChatName] = useState('');
     const [chatImage, setChatImage] = useState('');
 
-    const createChat = (event) => {
+    const createChat = async (event) => {
+        event.preventDefault();
 
-        fetch('https://localhost:6800/chats', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('token')
-            },
-            body: JSON.stringify(
-                {
-                    "name": chatName,
-                    "image": chatImage,
-                    "users":[
-                        {
-                            "username": localStorage.getItem('username')
-                        }
-                    ]
-                }
-            )
-
-        }).then(response => {
-            if(response.status === 200){
-                alert('Chat created successfully');
-            }else{
-                alert(response.status);
-            }
-        }
-        );
+        axios.post("https://localhost:6800/chats", {
+            
+                "name": chatName,
+                "image": chatImage,
+                "users": [
+                    {
+                        "username":"test"
+                    }
+                ]
+            
+        }).then((response)=>{
+            console.log(response);
+        }).catch((error)=>{
+            console.log(error);
+        });
 
     }
+
 
     return (
         <Container>
