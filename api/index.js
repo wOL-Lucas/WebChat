@@ -36,7 +36,7 @@ class server {
         })();
         
         this.rooms = JSON.parse(fs.readFileSync('./data/rooms.json')).rooms;
-        this.instanciate_existing_rooms();
+        this.instanciate_existent_rooms();
 
 
         this.app.use((req, res, next) => {
@@ -171,10 +171,10 @@ class server {
         return true;
     }
 
-    instanciate_existing_rooms() {
+    instanciate_existent_rooms() {
         Array.from(this.rooms).forEach((room) => {
             let room_websocket = new WebSocket.Server({ noServer: true });
-            room_websocket.user = room.users;
+            room_websocket.users = room.users;
             room_websocket.on('connection', (socket) => {
                 socket.on('message', (message) => {
                     room_websocket.clients.forEach((client) => {
