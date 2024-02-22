@@ -151,7 +151,7 @@ class server {
             }
 
 
-            if (pathname === room.name) {
+            if (pathname === room.name.toLowerCase().replace(/ /g, "_")){
                 room_websocket.handleUpgrade(request, socket, head, (ws) => {
                     room_websocket.emit('connection', ws, request);
                 });
@@ -191,7 +191,7 @@ class server {
                     socket.destroy();
                 }
 
-                if (pathname === room.name) {
+                if (pathname === room.name.toLowerCase().replace(/ /g, "_")) {
                     room_websocket.handleUpgrade(request, socket, head, (ws) => {
                         room_websocket.emit('connection', ws, request);
                     });
