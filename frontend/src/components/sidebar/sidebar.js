@@ -3,6 +3,7 @@ import Logo from '../logo/logo';
 import icon from '../../assets/chat.png';
 import newChat from '../../assets/newchat.png';
 import ListItem from '../listItem/listItem';
+import { useEffect, useState } from 'react';
 
 const SidebarContainer = styled.div`
     
@@ -18,27 +19,50 @@ const SidebarContainer = styled.div`
     align-items: center;
     `
 
+
+
+const ListItems = ({items}) => {
+    return (
+        <ul>
+            {items.map((item, index) => (
+                console.log(item),
+                <ListItem key={index} text={item.text} icon={item.icon ? item.icon : icon} module={item.module} />
+            ))}
+        </ul>
+    )
+}
+
 const Siderbar = () => {
-    const items = [
-        {
-            text: "New Chat",
-            icon: newChat,
-            module: "/create"
-        },
-        {
-            "text":"test",
-            "icon":icon,
-            "module":"/chat?chat=room1"
-        }
-    ]
+
+    const [items, setItems] = useState([]);
+
+    const getChats = async () => {
+        fetch('https://localhost:6800/chats', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        }).then(response => response.json())
+        .then(data => {
+            let chats = []
+            chats.push({"text": "New Chat", "icon": newChat, "module": "create"})
+            data.forEach(chat => {
+                chats.push({"text": chat.name, "icon": icon, "module": `chat?chat=${chat.name.toLowerCase().replace(/ /g, "_")}`})                
+            })
+            setItems(chats)
+        })
+    }
+
+    useEffect(()=>{
+        getChats();
+    }, [])
 
     return (
         <SidebarContainer>
             <Logo />
             <ul>
-                {items.map((item, index) => (
-                    <ListItem key={index} text={item.text} icon={item.icon} module={item.module} />
-                ))}
+                <ListItems items={items} />
             </ul>
         </SidebarContainer>
     );

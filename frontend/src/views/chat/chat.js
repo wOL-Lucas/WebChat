@@ -14,8 +14,11 @@ const Container = styled.div`
 
 const Form = styled.div`
     width: 100%;
+    margin: 0;
+    box-sizing: border-box;
     display: flex;
     background-color: #f8f8f8;
+    border-top: 1px solid #ccc;
     `;
 
 const MessageInput = styled.input`
@@ -41,7 +44,6 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
 
     const setmessage = (message) => {
-        console.log(message)
         setMessage(message)
     }
 
@@ -77,11 +79,10 @@ const Chat = () => {
         })
 
         updateMessages(message, true)
+        setmessage("")
     }
 
     const updateMessages = (message, isSelf) => {
-        console.log("Update for: ", message)
-        console.log(messages)
         setMessages([...messages, {"text":message, "isSelf":isSelf}])
     }
 
@@ -89,7 +90,7 @@ const Chat = () => {
         <Container>
             <Message content={messages} isSelf={false}/>
             <Form>
-                <MessageInput type="text" placeholder="Type a message..." onChange={(event)=>{setmessage(event.target.value)}}/>
+                <MessageInput type="text" placeholder="Type a message..." value={message} onChange={(event)=>{setmessage(event.target.value)}} onKeyDown={(event)=>{if(event.key === "Enter"){sendMessage()}}}/>
                 <Button onClick={sendMessage}>Send</Button>
             </Form>
         </Container>

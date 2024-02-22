@@ -7,6 +7,7 @@ import { RequireAuth } from 'react-auth-kit';
 const Display = styled.div`
   width: 100vw;
   height: 100vh;
+  padding: 20px;
 `
 
 const Container = styled.div`
