@@ -24,9 +24,9 @@ class server {
 
         }, this.app);
 
-        this.users = (() => { 
+        this.users = (() => {
             const users = []
-            let load = JSON.parse(fs.readFileSync('./data/users.json')).users 
+            let load = JSON.parse(fs.readFileSync('./data/users.json')).users
             Array.from(load).forEach((user) => {
                 const hash = crypto.createHash('sha256');
                 hash.update(JSON.stringify(user));
@@ -34,7 +34,7 @@ class server {
             })
             return users;
         })();
-        
+
         this.rooms = JSON.parse(fs.readFileSync('./data/rooms.json')).rooms;
         this.instanciate_existent_rooms();
 
@@ -123,6 +123,60 @@ class server {
         });
     }
 
+    create_new_websocket(room) {
+        let websocket = new WebSocket.Server({ noServer: true });
+
+        websocket.name = room.name.toLowerCase().replace(/ /g, "_");
+        websocket.users = room.users;
+
+        websocket.on('connection', (socket) => {
+            socket.on('message', (message) => {
+                websocket.clients.forEach((client) => {
+                    if (client !== socket && client.readyState === WebSocket.OPEN) {
+                        client.send(message);
+                    }
+                });
+            })
+        })
+
+        this.server.on('upgrade', (request, socket, head) => {
+            const pathname = request.url.split('/')[2];
+            if (!pathname) {
+                socket.destroy();
+            }
+
+            if (pathname === websocket.name) {
+                websocket.handleUpgrade(request, socket, head, (ws) => {
+                    if (request.headers.authorization) {
+                        const token = request.headers.authorization.split(' ')[1];
+                        if (!token) {
+                            ws.close(1008, "No token provided");
+                        }
+                        else {
+                            const verified = this.verify_token(token);
+                            if (!verified) {
+                                ws.close(1008, "Invalid token");
+                            }
+                            else {
+                                if (!websocket.users.some(user => user.username === verified.username)) {
+                                    ws.close(1008, "User not allowed in this room");
+                                }
+                                else{
+                                    websocket.emit('connection', ws, request);
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        ws.close(1008, "No token provided");
+                    }
+                });
+            }
+        });
+
+        this.rooms[room.name] = { "room": room, "websocket": websocket };
+    }
+
     create_room(name, users) {
         name = name.replace(/ /g, "_")
 
@@ -131,34 +185,8 @@ class server {
             return false;
         }
 
-        const room_websocket = new WebSocket.Server({ noServer: true });
+        this.create_new_websocket(room);
 
-        room_websocket.users = users;
-        room_websocket.on('connection', (socket) => {
-            socket.on('message', (message) => {
-                room_websocket.clients.forEach((client) => {
-                    if (client !== socket && client.readyState === WebSocket.OPEN) {
-                        client.send(message);
-                    }
-                });
-            });
-        });
-
-        this.server.on('upgrade', (request, socket, head) => {
-            const pathname = request.url.split('/')[2];
-            if (!pathname) {
-                socket.destroy();
-            }
-
-
-            if (pathname === room.name.toLowerCase().replace(/ /g, "_")){
-                room_websocket.handleUpgrade(request, socket, head, (ws) => {
-                    room_websocket.emit('connection', ws, request);
-                });
-            }
-        });
-
-        this.rooms[room.name] = { "room": room, "websocket": room_websocket };
         Array.from(this.users).forEach((user) => {
             if (user.username == users[0].username) {
                 user.rooms.push(room);
@@ -171,36 +199,11 @@ class server {
         return true;
     }
 
+
     instanciate_existent_rooms() {
         Array.from(this.rooms).forEach((room) => {
-            let room_websocket = new WebSocket.Server({ noServer: true });
-            room_websocket.users = room.users;
-            room_websocket.on('connection', (socket) => {
-                socket.on('message', (message) => {
-                    room_websocket.clients.forEach((client) => {
-                        if (client !== socket && client.readyState === WebSocket.OPEN) {
-                            client.send(message);
-                        }
-                    });
-                });
-            });
-
-            this.server.on('upgrade', (request, socket, head) => {
-                const pathname = request.url.split('/')[2];
-                if (!pathname) {
-                    socket.destroy();
-                }
-
-                if (pathname === room.name.toLowerCase().replace(/ /g, "_")) {
-                    room_websocket.handleUpgrade(request, socket, head, (ws) => {
-                        room_websocket.emit('connection', ws, request);
-                    });
-                }
-            });
-
-            this.rooms[room.name] = { "room": room, "websocket": room_websocket };
-        })
-
+            this.create_new_websocket(room);
+        });
     }
 }
 
