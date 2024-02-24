@@ -46,8 +46,9 @@ const Chat = () => {
     const setmessage = (message) => {
         setMessage(message)
     }
+    const wsToken = localStorage.getItem("wsToken");
 
-    const socket = useWebSocket("wss://localhost:6800/ws/" + chatName, {
+    const socket = useWebSocket(`wss://localhost:6800/ws/${chatName}?token=${wsToken}`, {
         onOpen: () => {
             console.log("opened")
         },

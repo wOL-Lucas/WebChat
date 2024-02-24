@@ -5,6 +5,7 @@ import Error from './views/error/error.js'
 import Login from './views/login/login.js'
 import Home from './views/home/home.js'
 import Chat from './views/chat/chat.js'
+import Load from './views/chat/load.js'
 import Create from './views/chat/create.js'
 import App from './App';
 import { AuthProvider } from "react-auth-kit";
@@ -26,6 +27,10 @@ const router = createBrowserRouter(
         {
           path: '/chat',
           element: <Chat />,
+        },
+        {
+          path: '/load',
+          element: <Load />,
         },
         {
           path: '/create',

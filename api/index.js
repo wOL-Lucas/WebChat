@@ -9,11 +9,12 @@ const cors = require('cors');
 const Room = require('./entities/room');
 const User = require('./entities/user');
 const crypto = require('crypto');
+const url = require('url');
 
 class server {
     constructor() {
         this.port = 6800;
-
+        this.privateKey = fs.readFileSync('./auth/privatekey.pem');
         this.app = express();
         this.app.use(cors());
         this.app.use(bodyParser.json());
@@ -68,12 +69,37 @@ class server {
             let user = hash.digest('hex');
 
             if (this.users.includes(user)) {
-                const token = jwt.sign({ "username": req.body.username, "expiresIn": "1h" }, fs.readFileSync('./auth/privatekey.pem'), { algorithm: 'RS256' });
+                const token = jwt.sign({ "username": req.body.username, "expiresIn": "1h" }, this.privateKey, { algorithm: 'RS256' });
                 return res.json({ "token": token });
             }
 
             return res.status(401).json({ "message": "Invalid credentials" });
         })
+
+        this.app.post('/ws/login', (req, res) => {
+            if (!req.headers.authorization) {
+                return res.status(401).json({ "message": "No token provided" });
+            }
+
+            const token = req.headers.authorization.split(' ')[1];
+            const verified = this.verify_token(token);
+            if (!verified) {
+                return res.status(401).json({ "message": "Invalid token" });
+
+            }else{
+                const userRooms = [];
+                for (const room of this.rooms) {
+                    for (const user of room.users) {
+                        if (user.username === verified.username) {
+                            userRooms.push(room.name);
+                        }
+                    }
+                }
+
+                const ephemeralToken = jwt.sign({ "username": verified.username, "rooms":userRooms,"expiresIn": "1m" }, this.privateKey, { algorithm: 'RS256' });
+                return res.json({ "token": ephemeralToken });
+            }
+        });
 
         this.app.post('/chats', (req, res) => {
             console.log("post for: ", req.body.name)
@@ -113,7 +139,7 @@ class server {
     }
 
     verify_token(token) {
-        return jwt.verify(token, fs.readFileSync('./auth/privatekey.pem'), { algorithms: ['RS256'] }, (err, decoded) => {
+        return jwt.verify(token, this.privateKey, { algorithms: ['RS256'] }, (err, decoded) => {
             if (err) {
                 return false;
             }
@@ -131,6 +157,7 @@ class server {
 
         websocket.on('connection', (socket) => {
             socket.on('message', (message) => {
+                console.log("received: ", message.toString());
                 websocket.clients.forEach((client) => {
                     if (client !== socket && client.readyState === WebSocket.OPEN) {
                         client.send(message);
@@ -140,31 +167,22 @@ class server {
         })
 
         this.server.on('upgrade', (request, socket, head) => {
-            const pathname = request.url.split('/')[2];
+            const pathname = request.url.split('/')[2].split('?')[0];
             if (!pathname) {
                 socket.destroy();
             }
-
+            
             if (pathname === websocket.name) {
                 websocket.handleUpgrade(request, socket, head, (ws) => {
-                    if (request.headers.authorization) {
-                        const token = request.headers.authorization.split(' ')[1];
-                        if (!token) {
-                            ws.close(1008, "No token provided");
+                    const token = url.parse(request.url, true).query.token;
+                    if(token) {
+                        const verified = this.verify_token(token);
+                        if (verified && verified.rooms.some((room) => room.toLowerCase().replace(/ /g, "_") === websocket.name)) {
+                            console.log("verified")
+                            websocket.emit('connection', ws, request);
                         }
                         else {
-                            const verified = this.verify_token(token);
-                            if (!verified) {
-                                ws.close(1008, "Invalid token");
-                            }
-                            else {
-                                if (!websocket.users.some(user => user.username === verified.username)) {
-                                    ws.close(1008, "User not allowed in this room");
-                                }
-                                else{
-                                    websocket.emit('connection', ws, request);
-                                }
-                            }
+                            ws.close(1008, "Invalid token");
                         }
                     }
                     else{
@@ -190,7 +208,6 @@ class server {
         Array.from(this.users).forEach((user) => {
             if (user.username == users[0].username) {
                 user.rooms.push(room);
-                console.log("user ", user.rooms)
             }
         });
 

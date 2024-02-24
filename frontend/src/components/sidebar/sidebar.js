@@ -25,7 +25,6 @@ const ListItems = ({items}) => {
     return (
         <ul>
             {items.map((item, index) => (
-                console.log(item),
                 <ListItem key={index} text={item.text} icon={item.icon ? item.icon : icon} module={item.module} />
             ))}
         </ul>
@@ -48,7 +47,7 @@ const Siderbar = () => {
             let chats = []
             chats.push({"text": "New Chat", "icon": newChat, "module": "create"})
             data.forEach(chat => {
-                chats.push({"text": chat.name, "icon": icon, "module": `chat?chat=${chat.name.toLowerCase().replace(/ /g, "_")}`})                
+                chats.push({"text": chat.name, "icon": icon, "module": `load?chat=${chat.name.toLowerCase().replace(/ /g, "_")}`})                
             })
             setItems(chats)
         })
