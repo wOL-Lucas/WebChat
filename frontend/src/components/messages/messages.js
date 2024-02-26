@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 const MessageContainer = styled.div`
     width: 100%;
-    height: 90%;
+    height: 87%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -17,7 +17,7 @@ const MessageBody = styled.div`
     display:flex;
     justify-content: ${props => props.selfMessage ? "flex-end" : "flex-start"};
 
-    p{  
+    div{  
         max-width: fit-content;
         margin: 5px 5px 5px 5px;
         
@@ -25,19 +25,37 @@ const MessageBody = styled.div`
         background-color: ${props => props.selfMessage ? "var(--root-color)" : "var(--secondary-color)"};
         border-radius: 10px;
     }
-
 `
 
-const Message = ({content}) => {
+const MessageText = styled.p`
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+    color: #333;
+`;
+
+const MessageUser = styled.p`
+    margin: 0;
+    padding: 0;
+    font-size: 10px;
+    color: #666;
+`;
+
+
+const Messages = ({content}) => {
     return (
         <MessageContainer>
             {
                 Array.from(content).map((message, index) => (
-                    <MessageBody key={index} selfMessage={message.isSelf}><p>{message.text}</p></MessageBody>
+                    <MessageBody key={index} selfMessage={message.isSelf}><div>
+                        <MessageText>{message.text}</MessageText>
+                        <MessageUser>{message.user} - {message.datetime}</MessageUser>
+                        </div>
+                    </MessageBody>
                 ))
             }
         </MessageContainer>
     )
 }
 
-export default Message;
+export default Messages;

@@ -17,8 +17,12 @@ const SidebarContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    
+    ul{
+        padding: 0;
+    }
+    
     `
-
 
 
 const ListItems = ({items}) => {
@@ -60,9 +64,7 @@ const Siderbar = () => {
     return (
         <SidebarContainer>
             <Logo />
-            <ul>
-                <ListItems items={items} />
-            </ul>
+            <ListItems items={items} />
         </SidebarContainer>
     );
 }

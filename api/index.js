@@ -157,10 +157,18 @@ class server {
 
         websocket.on('connection', (socket) => {
             socket.on('message', (message) => {
-                console.log("received: ", message.toString());
+                message = JSON.parse(message.toString());
+                if(!message.message || !message.username || !message.datetime){
+                    console.log("Invalid message ", message)
+                    return;
+                }
+                else{
+                    console.log("Message ", message)
+                }
+
                 websocket.clients.forEach((client) => {
                     if (client !== socket && client.readyState === WebSocket.OPEN) {
-                        client.send(message);
+                        client.send(JSON.stringify(message));
                     }
                 });
             })

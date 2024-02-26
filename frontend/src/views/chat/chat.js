@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import useWebSocket from 'react-use-websocket';
 import { useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import Message from '../../components/message/message';
+import Messages from '../../components/messages/messages';
 
 const Container = styled.div`
     width: 100%;
@@ -19,6 +19,7 @@ const Form = styled.div`
     display: flex;
     background-color: #f8f8f8;
     border-top: 1px solid #ccc;
+    border-radius: 0 0 10px 10px;
     `;
 
 const MessageInput = styled.input`
@@ -39,6 +40,7 @@ const Button = styled.button`
 const Chat = () => {
     const location = useLocation();
     const chatName = new URLSearchParams(location.search).get("chat");
+    const username = localStorage.getItem("username");
 
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState([]);
@@ -54,12 +56,10 @@ const Chat = () => {
         },
 
         onMessage: (event) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                let message = JSON.parse(reader.result).message
-                updateMessages(message, false)
-            }
-            reader.readAsText(event.data)
+            console.log(typeof event.data);
+            let message = JSON.parse(event.data);
+            console.log(message);
+            updateMessages(message.message, message.username, message.datetime, false);
         },
         
         onChange: (event) => {
@@ -74,22 +74,27 @@ const Chat = () => {
 
 
     const sendMessage = () => {
+        let date = new Date()
+        let datetime = date.toLocaleDateString() + " " + date.toLocaleTimeString()
+
         socket.sendJsonMessage({
             "message": message,
-            "username": "test"
+            "username": username,
+            "datetime": datetime
         })
 
-        updateMessages(message, true)
+        updateMessages(message, datetime, localStorage.getItem("username"), true)
         setmessage("")
     }
 
-    const updateMessages = (message, isSelf) => {
-        setMessages([...messages, {"text":message, "isSelf":isSelf}])
+    const updateMessages = (NewMessage, username, MessageDateTime,isSelf) => {
+        console.log(NewMessage, isSelf)
+        setMessages([...messages, {"text":NewMessage, "user":username, "datetime":MessageDateTime, "isSelf":isSelf}])
     }
 
     return (
         <Container>
-            <Message content={messages} isSelf={false}/>
+            <Messages content={messages} isSelf={false}/>
             <Form>
                 <MessageInput type="text" placeholder="Type a message..." value={message} onChange={(event)=>{setmessage(event.target.value)}} onKeyDown={(event)=>{if(event.key === "Enter"){sendMessage()}}}/>
                 <Button onClick={sendMessage}>Send</Button>
