@@ -127,7 +127,7 @@ class server {
                 return res.json(userChats);
             }
 
-            return res.status(404).json({ "message": "No rooms found for this user" });
+            return res.status(404).json([]);
         });
 
     };
