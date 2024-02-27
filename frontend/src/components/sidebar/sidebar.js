@@ -35,10 +35,10 @@ const ListItems = ({items}) => {
     )
 }
 
-const Siderbar = () => {
+const Sidebar = () => {
 
     const [items, setItems] = useState([]);
-
+    console.log(items)
     const getChats = async () => {
         fetch('https://localhost:6800/chats', {
             method: 'GET',
@@ -69,4 +69,4 @@ const Siderbar = () => {
     );
 }
 
-export default Siderbar;
+export default Sidebar;

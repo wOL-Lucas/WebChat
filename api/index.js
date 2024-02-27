@@ -107,6 +107,9 @@ class server {
             if (!created) {
                 return res.status(400).json({ "message": "Room already exists" });
             }
+            
+            let room = new Room(req.body.name, req.body.users);
+            this.rooms.push(room);
 
             //fs.writeFileSync('./data/users.json', "{\"users\":" + JSON.stringify(this.users) + "}");
             return res.json({ "message": "Room created", "room_name": req.body.name })
@@ -116,6 +119,7 @@ class server {
         this.app.get('/chats', (req, res) => {
             const userChats = [];
             for (const room of this.rooms) {
+                console.log("room users ", room.users)
                 for (const user of room.users) {
                     if (user.username === req.user) {
                         userChats.push(room);

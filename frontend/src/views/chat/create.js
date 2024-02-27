@@ -46,7 +46,7 @@ const Create = () => {
                 "image": chatImage,
                 "users": [
                     {
-                        "username":"test"
+                        "username":localStorage.getItem('username')
                     }
                 ]
             
