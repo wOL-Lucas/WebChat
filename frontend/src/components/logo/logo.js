@@ -1,7 +1,6 @@
 import logo_image from '../../assets/no_bg_logo.png'
 import styled from 'styled-components';
-import redirectToModule from '../../utils/redirectToModule';
-
+import { useNavigate } from 'react-router-dom';
 
 const LogoContainer = styled.div`
     img{
@@ -19,6 +18,11 @@ const LogoContainer = styled.div`
 `;
 
 const Logo = () => {
+    const navigate = useNavigate();
+    const redirectToModule = (event, module) => {
+        navigate(module);
+    }
+
     return (
         <LogoContainer onClick={(event)=>{redirectToModule(event, "/home")}}>
             <img src={logo_image} alt="logo" />

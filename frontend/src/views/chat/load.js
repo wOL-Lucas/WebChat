@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState } from "react";
 
 
@@ -7,7 +7,7 @@ const Load = () => {
     const location = useLocation();
     const chatName = new URLSearchParams(location.search).get("chat");
     const [wsToken, setWsToken] = useState(null);
-
+    const navigate = useNavigate();
 
     while (!wsToken) {
         fetch("https://localhost:6800/ws/login", {
@@ -26,7 +26,8 @@ const Load = () => {
     }
 
     localStorage.setItem("wsToken", wsToken);
-    window.location.href = `/chat?chat=${chatName}`;
+    navigate(`/chat?chat=${chatName}`);
+
 }
 
 export default Load;

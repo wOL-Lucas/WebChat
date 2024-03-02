@@ -19,53 +19,53 @@ const SidebarContainer = styled.div`
     align-items: center;
     
     ul{
-        padding: 0;
+      padding: 0;
     }
     
     `
 
 
 const ListItems = ({items}) => {
-    return (
-        <ul>
-            {items.map((item, index) => (
-                <ListItem key={index} text={item.text} icon={item.icon ? item.icon : icon} module={item.module} />
-            ))}
-        </ul>
+  return (
+    <ul>
+      {items.map((item, index) => (
+          <ListItem key={index} text={item.text} icon={item.icon ? item.icon : icon} module={item.module} />
+        ))}
+    </ul>
     )
 }
 
 const Sidebar = () => {
 
-    const [items, setItems] = useState([]);
-    console.log(items)
-    const getChats = async () => {
-        fetch('https://localhost:6800/chats', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('token')
-            }
-        }).then(response => response.json())
-        .then(data => {
-            let chats = []
-            chats.push({"text": "New Chat", "icon": newChat, "module": "create"})
-            data.forEach(chat => {
-                chats.push({"text": chat.name, "icon": icon, "module": `load?chat=${chat.name.toLowerCase().replace(/ /g, "_")}`})                
-            })
-            setItems(chats)
-        })
+  const [items, setItems] = useState([]);
+  console.log(items)
+  const getChats = async () => {
+      fetch('https://localhost:6800/chats', {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+      }).then(response => response.json())
+      .then(data => {
+          let chats = []
+          chats.push({"text": "New Chat", "icon": newChat, "module": "create"})
+          data.forEach(chat => {
+              chats.push({"text": chat.name, "icon": icon, "module": `load?chat=${chat.name.toLowerCase().replace(/ /g, "_")}`})                
+          })
+          setItems(chats)
+      })
     }
 
     useEffect(()=>{
-        getChats();
+      getChats();
     }, [])
 
     return (
-        <SidebarContainer>
-            <Logo />
-            <ListItems items={items} />
-        </SidebarContainer>
+      <SidebarContainer>
+        <Logo />
+        <ListItems items={items} />
+      </SidebarContainer>
     );
 }
 
