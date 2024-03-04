@@ -15,14 +15,14 @@ const MessageBody = styled.div`
     padding: 0;
     margin: 5px;
     display:flex;
-    justify-content: ${props => props.selfMessage ? "flex-end" : "flex-start"};
+    justify-content: ${props => props.selfmessage ? "flex-end" : "flex-start"};
 
     div{  
         max-width: fit-content;
         margin: 5px 5px 5px 5px;
         
         padding: 10px;
-        background-color: ${props => props.selfMessage ? "var(--root-color)" : "var(--secondary-color)"};
+        background-color: ${props => props.selfmessage ? "var(--root-color)" : "var(--secondary-color)"};
         border-radius: 10px;
     }
 `
@@ -33,6 +33,12 @@ const MessageText = styled.p`
     font-size: 18px;
     color: #333;
 `;
+
+const AudioMessage = styled.audio`
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+`
 
 const MessageUser = styled.p`
     margin: 0;
@@ -47,9 +53,14 @@ const Messages = ({content}) => {
         <MessageContainer>
             {
                 Array.from(content).map((message, index) => (
-                    <MessageBody key={index} selfMessage={message.isSelf}><div>
-                        <MessageText>{message.text}</MessageText>
-                        <MessageUser>{message.user} - {message.datetime}</MessageUser>
+                    <MessageBody key={index} selfmessage={message.isSelf}>
+                        <div>
+                          {message.type === "text" ? 
+                          (<MessageText>{message.content}</MessageText>)
+                          : 
+                          (<AudioMessage src={URL.createObjectURL(message.content)} controls></AudioMessage>)
+                          }
+                          <MessageUser>{message.user} - {message.datetime}</MessageUser>
                         </div>
                     </MessageBody>
                 ))

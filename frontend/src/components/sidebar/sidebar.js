@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 const SidebarContainer = styled.div`
     
     width: 20%;
+    max-width: 200px;
     height: 100vh;
     padding-left: 5px;
     padding-right: 5px;

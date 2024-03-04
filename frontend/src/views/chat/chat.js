@@ -3,6 +3,11 @@ import useWebSocket from 'react-use-websocket';
 import { useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import Messages from '../../components/messages/messages';
+import { GrantMicPermission, FinishDeviceUsage } from '../../utils/PeripheralsHandler';
+import { blobParser } from '../../utils/blobParser';
+import MicIcon from '../../assets/mic.png';
+import SendIcon from '../../assets/send.png';
+
 
 const Container = styled.div`
     width: 100%;
@@ -32,9 +37,19 @@ const MessageInput = styled.input`
 
 const Button = styled.button`
     height: 40px;
-    border: none;
-    border-radius: 30%;
+    width: 40px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
     margin: 10px;
+    background-color: #f8f8f8;
+    
+    img{
+      width: 20px;
+      heigth: auto;
+      margin: 0;
+      padding: 0;
+    }
+
 `;
 
 const Chat = () => {
@@ -44,10 +59,13 @@ const Chat = () => {
 
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState([]);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
+    const [isRecording, setIsRecording] = useState(false);
 
     const setmessage = (message) => {
         setMessage(message)
     }
+
     const wsToken = localStorage.getItem("wsToken");
 
     const socket = useWebSocket(`wss://localhost:6800/ws/${chatName}?token=${wsToken}`, {
@@ -71,33 +89,73 @@ const Chat = () => {
         }
 
     })
+    
+
+    const recordAudio = async () => {
+        try {
+            setIsRecording(true);
+            const stream = await GrantMicPermission();
+            const mediaRecorder = new MediaRecorder(stream);
+            setMediaRecorder(mediaRecorder);
+            mediaRecorder.start();
+            mediaRecorder.ondataavailable = (event) => {
+                console.log("data ", event.data);
+                sendAudioMessage(event.data);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
 
-    const sendMessage = () => {
+    const sendAudioMessage = (blob) => {
+        let date = new Date()
+        let datetime = date.toLocaleDateString() + " " + date.toLocaleTimeString()
+        let blobAsBase64 = blobParser(blob);
+        blobAsBase64.then((base64data) => {  
+            socket.sendJsonMessage({
+              "message": base64data,
+              "username": username,
+              "type":"audio",
+              "datetime": datetime
+            })
+        })
+        updateMessages(blob, localStorage.getItem("username"), "audio", datetime, true)
+    }
+
+    const sendTextMessage = () => {
         let date = new Date()
         let datetime = date.toLocaleDateString() + " " + date.toLocaleTimeString()
 
         socket.sendJsonMessage({
             "message": message,
             "username": username,
+            "type":"text",
             "datetime": datetime
         })
 
-        updateMessages(message, datetime, localStorage.getItem("username"), true)
+        updateMessages(message, localStorage.getItem("username"), "text", datetime,true)
         setmessage("")
     }
+    
+    const finishRecording = () => {
+        setIsRecording(false);
+        FinishDeviceUsage(mediaRecorder.stream);
+        mediaRecorder.stop();
+    }
 
-    const updateMessages = (NewMessage, username, MessageDateTime,isSelf) => {
+
+    const updateMessages = (NewMessage, username, type, MessageDateTime,isSelf) => {
         console.log(NewMessage, isSelf)
-        setMessages([...messages, {"text":NewMessage, "user":username, "datetime":MessageDateTime, "isSelf":isSelf}])
+        setMessages([...messages, {"content":NewMessage, "user":username, "type":type, "datetime":MessageDateTime, "isSelf":isSelf}])
     }
 
     return (
         <Container>
             <Messages content={messages} isSelf={false}/>
             <Form>
-                <MessageInput type="text" placeholder="Type a message..." value={message} onChange={(event)=>{setmessage(event.target.value)}} onKeyDown={(event)=>{if(event.key === "Enter"){sendMessage()}}}/>
-                <Button onClick={sendMessage}>Send</Button>
+                <MessageInput type="text" placeholder="Type a message..." value={message} onChange={(event)=>{setmessage(event.target.value)}} onKeyDown={(event)=>{if(event.key === "Enter" && message !== ""){sendTextMessage()}}}/>
+                <Button onClick={message === "" ? (isRecording ? finishRecording : recordAudio) : sendTextMessage}><img src={message === "" ? MicIcon : SendIcon}/></Button>
             </Form>
         </Container>
     )
