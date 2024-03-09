@@ -1,10 +1,10 @@
 import styled from 'styled-components';
 import useWebSocket from 'react-use-websocket';
 import { useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Messages from '../../components/messages/messages';
 import { GrantMicPermission, FinishDeviceUsage } from '../../utils/PeripheralsHandler';
-import { blobParser } from '../../utils/blobParser';
+import { blobToBase64, base64toBlob } from '../../utils/blobParser';
 import MicIcon from '../../assets/mic.png';
 import SendIcon from '../../assets/send.png';
 
@@ -61,8 +61,8 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [mediaRecorder, setMediaRecorder] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
-    const [audioChunks, setAudioChunks] = useState([]);
     const setmessage = (message) => {
+        console.log(message)
         setMessage(message)
     }
 
@@ -75,10 +75,13 @@ const Chat = () => {
         },
 
         onMessage: (event) => {
-            console.log(typeof event.data);
             let message = JSON.parse(event.data);
-            console.log(message);
-            updateMessages(message.message, message.username, message.datetime, false);
+
+            if(message.type === "audio"){
+                message.message = base64toBlob(message.message, "audio/wav");
+            }
+            
+            updateMessages(message.message, message.username, message.type, message.datetime, false);
         },
         
         onChange: (event) => {
@@ -91,10 +94,6 @@ const Chat = () => {
 
     })
     
-    const handleIncomingAudioChunks = (event) => {
-        setAudioChunks([...audioChunks, event.data]);
-    }
-    
     const recordAudio = async () => {
         try {
             setIsRecording(true);
@@ -102,14 +101,16 @@ const Chat = () => {
             const mediaRecorder = new MediaRecorder(stream);
             setMediaRecorder(mediaRecorder);
             
-            
+            let audioChunks = [];
             mediaRecorder.start(2000);
             mediaRecorder.ondataavailable = (event) => {
-                handleIncomingAudioChunks(event);
+                audioChunks.push(event.data);
             }
             
+            
             mediaRecorder.onstop = () => {
-                console.log("audioChunks", audioChunks.length);
+                let audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
+                sendAudioMessage(audioBlob);
             }
         } catch (error) {
             console.log(error);
@@ -120,7 +121,7 @@ const Chat = () => {
     const sendAudioMessage = (blob) => {
         let date = new Date()
         let datetime = date.toLocaleDateString() + " " + date.toLocaleTimeString()
-        let blobAsBase64 = blobParser(blob);
+        let blobAsBase64 = blobToBase64(blob);
         blobAsBase64.then((base64data) => {  
             socket.sendJsonMessage({
               "message": base64data,
@@ -130,8 +131,6 @@ const Chat = () => {
             })
         })
         updateMessages(blob, localStorage.getItem("username"), "audio", datetime, true)
-        setAudioChunks([]);
-        console.log("audiochunks length ", audioChunks.length)
     }
 
     const sendTextMessage = () => {
@@ -150,16 +149,13 @@ const Chat = () => {
     }
     
     const finishRecording = () => {
-        console.log(audioChunks)
         setIsRecording(false);
         FinishDeviceUsage(mediaRecorder.stream);
         mediaRecorder.stop();
-        sendAudioMessage(new Blob(audioChunks, {type: "audio/wav"}));
     }
 
 
     const updateMessages = (NewMessage, username, type, MessageDateTime,isSelf) => {
-        console.log(NewMessage, isSelf)
         setMessages([...messages, {"content":NewMessage, "user":username, "type":type, "datetime":MessageDateTime, "isSelf":isSelf}])
     }
 

@@ -38,7 +38,6 @@ const AudioMessage = styled.audio`
     margin: 0;
     padding: 0;
     font-size: 18px;
-    background-color: var(--root-color);
     border-radius: 10px;
 ` 
 
