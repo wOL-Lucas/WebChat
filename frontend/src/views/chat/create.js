@@ -41,24 +41,26 @@ const Create = () => {
         event.preventDefault();
 
         axios.post("https://localhost:6800/chats", {
-            
-                "name": chatName,
-                "image": chatImage,
-                "users": [
-                    {
-                        "username":localStorage.getItem('username')
-                    }
-                ]
-            
-        },{headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
 
-        }}).then((response)=>{
+            "name": chatName,
+            "image": chatImage,
+            "users": [
+                {
+                    "username": localStorage.getItem('username')
+                }
+            ]
+
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+
+            }
+        }).then((response) => {
             console.log(response);
-        }).then((event)=>{
+        }).then((event) => {
             window.location.href = '/home';
-        }).catch((error)=>{
+        }).catch((error) => {
             console.log(error);
         });
 
@@ -68,12 +70,12 @@ const Create = () => {
     return (
         <Container>
             <Form onSubmit={createChat}>
-                <Input type="text" placeholder="Enter the chat name"  onChange={(event)=>{setChatName(event.target.value)}}/>
-                <Input type="text" placeholder="Enter the chat image URL" onChange={(event)=>{setChatImage(event.target.value)}}/>
+                <Input type="text" placeholder="Enter the chat name" onChange={(event) => { setChatName(event.target.value) }} />
+                <Input type="text" placeholder="Enter the chat image URL" onChange={(event) => { setChatImage(event.target.value) }} />
                 <button>Create</button>
             </Form>
         </Container>
-    )  
+    )
 }
 
 export default Create;

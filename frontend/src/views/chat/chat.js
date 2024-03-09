@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import useWebSocket from 'react-use-websocket';
 import { useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Messages from '../../components/messages/messages';
 import { GrantMicPermission, FinishDeviceUsage } from '../../utils/PeripheralsHandler';
 import { blobParser } from '../../utils/blobParser';
@@ -61,10 +61,11 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [mediaRecorder, setMediaRecorder] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
-
+    const [audioChunks, setAudioChunks] = useState([]);
     const setmessage = (message) => {
         setMessage(message)
     }
+
 
     const wsToken = localStorage.getItem("wsToken");
 
@@ -90,17 +91,25 @@ const Chat = () => {
 
     })
     
-
+    const handleIncomingAudioChunks = (event) => {
+        setAudioChunks([...audioChunks, event.data]);
+    }
+    
     const recordAudio = async () => {
         try {
             setIsRecording(true);
             const stream = await GrantMicPermission();
             const mediaRecorder = new MediaRecorder(stream);
             setMediaRecorder(mediaRecorder);
-            mediaRecorder.start();
+            
+            
+            mediaRecorder.start(2000);
             mediaRecorder.ondataavailable = (event) => {
-                console.log("data ", event.data);
-                sendAudioMessage(event.data);
+                handleIncomingAudioChunks(event);
+            }
+            
+            mediaRecorder.onstop = () => {
+                console.log("audioChunks", audioChunks.length);
             }
         } catch (error) {
             console.log(error);
@@ -121,6 +130,8 @@ const Chat = () => {
             })
         })
         updateMessages(blob, localStorage.getItem("username"), "audio", datetime, true)
+        setAudioChunks([]);
+        console.log("audiochunks length ", audioChunks.length)
     }
 
     const sendTextMessage = () => {
@@ -139,9 +150,11 @@ const Chat = () => {
     }
     
     const finishRecording = () => {
+        console.log(audioChunks)
         setIsRecording(false);
         FinishDeviceUsage(mediaRecorder.stream);
         mediaRecorder.stop();
+        sendAudioMessage(new Blob(audioChunks, {type: "audio/wav"}));
     }
 
 
@@ -155,7 +168,7 @@ const Chat = () => {
             <Messages content={messages} isSelf={false}/>
             <Form>
                 <MessageInput type="text" placeholder="Type a message..." value={message} onChange={(event)=>{setmessage(event.target.value)}} onKeyDown={(event)=>{if(event.key === "Enter" && message !== ""){sendTextMessage()}}}/>
-                <Button onClick={message === "" ? (isRecording ? finishRecording : recordAudio) : sendTextMessage}><img src={message === "" ? MicIcon : SendIcon}/></Button>
+                <Button onClick={message === "" ? (isRecording ? finishRecording : recordAudio) : sendTextMessage}><img src={isRecording ? SendIcon : (message === "" ? MicIcon : SendIcon)}/></Button>
             </Form>
         </Container>
     )

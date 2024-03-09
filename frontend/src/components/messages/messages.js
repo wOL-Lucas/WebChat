@@ -38,12 +38,14 @@ const AudioMessage = styled.audio`
     margin: 0;
     padding: 0;
     font-size: 18px;
-`
+    background-color: var(--root-color);
+    border-radius: 10px;
+` 
 
 const MessageUser = styled.p`
     margin: 0;
     padding: 0;
-    font-size: 10px;
+    font-size: 12px;
     color: #666;
 `;
 
@@ -60,7 +62,7 @@ const Messages = ({content}) => {
                           : 
                           (<AudioMessage src={URL.createObjectURL(message.content)} controls></AudioMessage>)
                           }
-                          <MessageUser>{message.user} - {message.datetime}</MessageUser>
+                          <MessageUser><b>{message.user}</b> - {message.datetime}</MessageUser>
                         </div>
                     </MessageBody>
                 ))
