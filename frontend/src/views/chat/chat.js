@@ -14,15 +14,15 @@ const Container = styled.div`
     height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    `;
+    align-items: center;  
+  `;
 
 const Form = styled.div`
     width: 100%;
     margin: 0;
     box-sizing: border-box;
     display: flex;
-    background-color: #f8f8f8;
+    background-color: #cccccc;
     border-top: 1px solid #ccc;
     border-radius: 0 0 10px 10px;
     `;
@@ -33,6 +33,9 @@ const MessageInput = styled.input`
     border: none;
     border-radius: 10px;
     margin: 10px;
+    &:focus{
+      outline: 1px solid var(--root-color);
+    }
     `;
 
 const Button = styled.button`
@@ -49,7 +52,29 @@ const Button = styled.button`
       margin: 0;
       padding: 0;
     }
-
+    
+    &:focus{
+      outline: 1px solid var(--root-color);
+      background-color: #f0f0f0;
+    }
+    
+    @keyFrames pulse {
+      0% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+          }
+      50% { 
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+          }
+      100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+          }
+    }
+    
+    animation: ${props => props.isrecording ? "pulse 1s infinite" : "none"};
+    outline: ${props => props.isrecording ? "1px solid var(--secondary-color)" : "none"};
 `;
 
 const Chat = () => {
@@ -164,7 +189,7 @@ const Chat = () => {
             <Messages content={messages} isSelf={false}/>
             <Form>
                 <MessageInput type="text" placeholder="Type a message..." value={message} onChange={(event)=>{setmessage(event.target.value)}} onKeyDown={(event)=>{if(event.key === "Enter" && message !== ""){sendTextMessage()}}}/>
-                <Button onClick={message === "" ? (isRecording ? finishRecording : recordAudio) : sendTextMessage}><img src={isRecording ? SendIcon : (message === "" ? MicIcon : SendIcon)}/></Button>
+                <Button isrecording={isRecording ? true : false} onClick={message === "" ? (isRecording ? finishRecording : recordAudio) : sendTextMessage}><img src={isRecording ? SendIcon : (message === "" ? MicIcon : SendIcon)}/></Button>
             </Form>
         </Container>
     )

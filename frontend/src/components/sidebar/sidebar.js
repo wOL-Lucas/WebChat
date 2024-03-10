@@ -12,9 +12,11 @@ const SidebarContainer = styled.div`
     height: 100vh;
     padding-left: 5px;
     padding-right: 5px;
-    background: linear-gradient(180deg, #ffff 0%, var(--root-color) 100%);
-    border-right: 1px solid #e0e0e0;
 
+    background: linear-gradient(137deg,var(--root-color), white, var(--secondary-color), white);
+    background-size: 500% 400%;
+    animation: mainFade 21s ease infinite;
+    
     display: flex;
     flex-direction: column;
     align-items: center;

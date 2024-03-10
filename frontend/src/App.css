@@ -2,3 +2,19 @@
     --root-color: rgb(170,235,255);
     --secondary-color: rgb(255,166,191);
 }
+
+@-webkit-keyframes mainFade {
+    0%{background-position:13% 0%}
+    50%{background-position:88% 100%}
+    100%{background-position:13% 0%}
+}
+@-moz-keyframes mainFade {
+    0%{background-position:13% 0%}
+    50%{background-position:88% 100%}
+    100%{background-position:13% 0%}
+}
+@keyframes mainFade {
+    0%{background-position:13% 0%}
+    50%{background-position:88% 100%}
+    100%{background-position:13% 0%}
+}

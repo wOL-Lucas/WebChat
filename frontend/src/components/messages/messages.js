@@ -2,12 +2,14 @@ import styled from 'styled-components';
 
 const MessageContainer = styled.div`
     width: 100%;
-    height: 87%;
+    height: 89%;
     display: flex;
     flex-direction: column;
     align-items: center;
     background-color: #f8f8f8;
-    border-radius: 10px;
+    border-radius: 10px 10px 0 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 `;
 
 const MessageBody = styled.div`
@@ -39,6 +41,9 @@ const AudioMessage = styled.audio`
     padding: 0;
     font-size: 18px;
     border-radius: 10px;
+    &:focus{
+      outline: none;
+    }
 ` 
 
 const MessageUser = styled.p`

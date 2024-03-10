@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import logo_image from '../../assets/logo.png'
+import logo_image from '../../assets/no_bg_logo.png'
 import axios from 'axios';
 import {useSignIn} from 'react-auth-kit';
 
@@ -10,6 +10,11 @@ const LoginContainer = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
+
+    background: linear-gradient(137deg,var(--root-color), white, var(--secondary-color), white);
+    background-size: 500% 400%;
+    animation: mainFade 21s ease infinite;
+
 `;
 
 const Box = styled.div`
@@ -72,7 +77,11 @@ const Button = styled.button`
     margin-top: 20px;
     border-radius: 5px;
     border: none;
-    background-color: var(--root-color);
+
+    background: linear-gradient(137deg,var(--root-color), white, var(--secondary-color), white);
+    background-size: 500% 400%;
+    animation: mainFade 21s ease infinite;
+
     color: black;
     font-size: 18px;
     font-weight: bold;
@@ -80,7 +89,7 @@ const Button = styled.button`
     transition: background-color 0.3s ease;
 
     &:hover {
-        background-color: var(--secondary-color);
+      background-color: var(--secondary-color);
     }
 `;
 
@@ -113,7 +122,7 @@ function Login() {
                 localStorage.setItem('username', username);
                 localStorage.setItem('token', response.data.token);
 
-                window.location.href = `home?username=${username}`;
+                window.location.href = `home`;
             } 
             else {
                 console.error('Authentication failed');
